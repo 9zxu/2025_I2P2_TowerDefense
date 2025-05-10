@@ -17,6 +17,8 @@
 #include "Engine/LOG.hpp"
 #include "Engine/Resources.hpp"
 #include "PlayScene.hpp"
+
+#include "Enemy/PlaneEnemy.hpp"
 #include "Turret/LaserTurret.hpp"
 #include "Turret/MachineGunTurret.hpp"
 #include "Turret/TurretButton.hpp"
@@ -135,7 +137,7 @@ void PlayScene::Update(float deltaTime) {
         if (enemyWaveData.empty()) {
             if (EnemyGroup->GetObjects().empty()) {
                 // Free resources.
-                /*delete TileMapGroup;
+                delete TileMapGroup;
                 delete GroundEffectGroup;
                 delete DebugIndicatorGroup;
                 delete TowerGroup;
@@ -143,7 +145,7 @@ void PlayScene::Update(float deltaTime) {
                 delete BulletGroup;
                 delete EffectGroup;
                 delete UIGroup;
-                delete imgTarget;*/
+                delete imgTarget;
                 // Win.
                 Engine::GameEngine::GetInstance().ChangeScene("win-scene");
             }
@@ -161,8 +163,9 @@ void PlayScene::Update(float deltaTime) {
                 EnemyGroup->AddNewObject(enemy = new SoldierEnemy(SpawnCoordinate.x, SpawnCoordinate.y));
                 break;
             // TODO HACKATHON-3 (2/3): Add your new enemy here.
-            // case 2:
-            //     ...
+            case 2:
+                EnemyGroup->AddNewObject(enemy = new PlaneEnemy(SpawnCoordinate.x, SpawnCoordinate.y));
+                break;
             case 3:
                 EnemyGroup->AddNewObject(enemy = new TankEnemy(SpawnCoordinate.x, SpawnCoordinate.y));
                 break;
@@ -262,6 +265,10 @@ void PlayScene::OnKeyDown(int keyCode) {
         keyStrokes.push_back(keyCode);
         if (keyStrokes.size() > code.size())
             keyStrokes.pop_front();
+        if (std::equal(code.begin(), code.end(), keyStrokes.begin())) {
+            enemyWaveData.emplace_front(2,0);
+            EarnMoney(10000);
+        }
     }
     if (keyCode == ALLEGRO_KEY_Q) {
         // Hotkey for MachineGunTurret.
@@ -280,6 +287,7 @@ void PlayScene::Hit() {
     if (lives <= 0) {
         Engine::GameEngine::GetInstance().ChangeScene("lose");
     }
+    UILives->Text = std::to_string(lives);
 }
 int PlayScene::GetMoney() const {
     return money;
