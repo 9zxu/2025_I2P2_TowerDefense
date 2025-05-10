@@ -3,7 +3,8 @@
 > [std::placeholders::_1](https://en.cppreference.com/w/cpp/utility/functional/placeholders)
 > [std::bind](https://en.cppreference.com/w/cpp/utility/functional/bind)
 ## game engine
-
+### keyboard event
+> [keyboard routines](https://www.allegro.cc/manual/5/keyboard.html)
 ```c++
 void GameEngine::startEventLoop() {
     // wait for event...
@@ -17,12 +18,17 @@ void GameEngine::startEventLoop() {
             update(timeElapsed.count());
 }
 ```
-```c++
-    void GameEngine::update(float deltaTime) {
-        //...
-        activeScene->Update(deltaTime);
-    }
 ```
+ALLEGRO_EVENT_KEY_DOWN
+
+A keyboard key was pressed.
+
+keyboard.keycode (int)
+
+    The code corresponding to the physical key which was pressed. See the "Key codes" section for the list of ALLEGRO_KEY_* constants.
+```
+`ALLEGRO_KEYMOD_SHIFT` will not be sent as a `ALLEGRO_EVENT_KEY_DOWN` event, it will return an `unsigned int` from `event.keyboard.modifiers`
+
 ## enemy
 ### enemy wave
 according to the following function,

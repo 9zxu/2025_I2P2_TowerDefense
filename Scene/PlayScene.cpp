@@ -42,7 +42,7 @@ const Engine::Point PlayScene::EndGridPoint = Engine::Point(MapWidth, MapHeight 
 const std::vector<int> PlayScene::code = {
     ALLEGRO_KEY_UP, ALLEGRO_KEY_UP, ALLEGRO_KEY_DOWN, ALLEGRO_KEY_DOWN,
     ALLEGRO_KEY_LEFT, ALLEGRO_KEY_RIGHT, ALLEGRO_KEY_LEFT, ALLEGRO_KEY_RIGHT,
-    ALLEGRO_KEY_B, ALLEGRO_KEY_A, ALLEGRO_KEYMOD_SHIFT, ALLEGRO_KEY_ENTER
+    ALLEGRO_KEY_B, ALLEGRO_KEY_A,ALLEGRO_KEY_LSHIFT,ALLEGRO_KEY_ENTER // ALLEGRO_KEYMOD_SHIFT
 };
 Engine::Point PlayScene::GetClientSize() {
     return Engine::Point(MapWidth * BlockSize, MapHeight * BlockSize);
@@ -136,18 +136,19 @@ void PlayScene::Update(float deltaTime) {
         ticks += deltaTime;
         if (enemyWaveData.empty()) {
             if (EnemyGroup->GetObjects().empty()) {
-                // Free resources.
-                delete TileMapGroup;
-                delete GroundEffectGroup;
-                delete DebugIndicatorGroup;
-                delete TowerGroup;
-                delete EnemyGroup;
-                delete BulletGroup;
-                delete EffectGroup;
-                delete UIGroup;
-                delete imgTarget;
                 // Win.
-                Engine::GameEngine::GetInstance().ChangeScene("win-scene");
+                // // Free resources.
+                // delete TileMapGroup;
+                // delete GroundEffectGroup;
+                // delete DebugIndicatorGroup;
+                // delete TowerGroup;
+                // delete EnemyGroup;
+                // delete BulletGroup;
+                // delete EffectGroup;
+                // delete UIGroup;
+                // delete imgTarget;
+                Engine::GameEngine::GetInstance().ChangeScene("win");
+                // return;
             }
             continue;
         }
@@ -266,7 +267,7 @@ void PlayScene::OnKeyDown(int keyCode) {
         if (keyStrokes.size() > code.size())
             keyStrokes.pop_front();
         if (std::equal(code.begin(), code.end(), keyStrokes.begin())) {
-            enemyWaveData.emplace_front(2,0);
+            GroundEffectGroup->AddNewObject(new Plane());
             EarnMoney(10000);
         }
     }
@@ -430,6 +431,22 @@ std::vector<std::vector<int>> PlayScene::CalculateBFSDistance() {
     while (!que.empty()) {
         Engine::Point p = que.front();
         que.pop();
+
+        const int dx[4] = {0,0,-1,1};
+        const int dy[4] = {-1,1,0,0};
+
+        for (int i = 0; i < 4; i++) {
+            int nx = p.x + dx[i];
+            int ny = p.y + dy[i];
+            if (nx < 0 || nx >= MapWidth || ny < 0 || ny >= MapHeight) {
+                continue;
+            }
+            if (mapState[ny][nx] == TILE_DIRT && map[ny][nx] == -1) {
+                map[ny][nx] = map[p.y][p.x] + 1;
+                que.push(Engine::Point(nx, ny));
+            }
+        }
+
         // TODO PROJECT-1 (1/1): Implement a BFS starting from the most right-bottom block in the map.
         //               For each step you should assign the corresponding distance to the most right-bottom block.
         //               mapState[y][x] is TILE_DIRT if it is empty.
