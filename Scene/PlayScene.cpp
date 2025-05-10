@@ -288,7 +288,7 @@ void PlayScene::Hit() {
     if (lives <= 0) {
         Engine::GameEngine::GetInstance().ChangeScene("lose");
     }
-    UILives->Text = std::to_string(lives);
+    UILives->Text = std::string("Life ")+std::to_string(lives);
 }
 int PlayScene::GetMoney() const {
     return money;
