@@ -13,13 +13,16 @@
 #include "UI/Component/ImageButton.hpp"
 #include "UI/Component/Label.hpp"
 
+// std::vector<std::pair<std::string, int>> ScoreBoardScene::nameScorePair;
+std::set<std::pair<std::string, int>, ScoreComparator> ScoreBoardScene::nameScorePair;
+
+
 const int ScoreBoardScene::recordPerPage = 5;
 int ScoreBoardScene::currentPage = 0;
 
 void ScoreBoardScene::Initialize() {
-    nameScorePair.clear();
+    // nameScorePair.clear();
     ReadRecord();
-    // AddNewObject(RecordGroup = new Group());
 
     int w = Engine::GameEngine::GetInstance().GetScreenSize().x;
     int h = Engine::GameEngine::GetInstance().GetScreenSize().y;
@@ -50,6 +53,8 @@ void ScoreBoardScene::Initialize() {
 void ScoreBoardScene::Draw() const {
     IScene::Draw();
     // record
+    std::vector<std::pair<std::string, int>> sortedList(nameScorePair.begin(), nameScorePair.end());
+
     int w = Engine::GameEngine::GetInstance().GetScreenSize().x;
     int h = Engine::GameEngine::GetInstance().GetScreenSize().y;
     int halfW = w / 2;
@@ -60,7 +65,7 @@ void ScoreBoardScene::Draw() const {
     size_t start = currentPage * recordPerPage;
     size_t end = std::min(start + recordPerPage, nameScorePair.size());
     for (size_t i=start; i<end; i++) {
-        std::string displayText = nameScorePair[i].first + " " + std::to_string(nameScorePair[i].second);
+        std::string displayText = sortedList[i].first + " " + std::to_string(sortedList[i].second);
         float x = halfW;
         float y = startY + (i-start) * offsetY;
         Engine::Label label(displayText, "pirulen.ttf", 48, x, y, 0, 255, 0, 255, 0.5, 0.5);
@@ -69,6 +74,7 @@ void ScoreBoardScene::Draw() const {
 }
 
 void ScoreBoardScene::Terminate() {
+    WriteRecord();
     IScene::Terminate();
 }
 
@@ -95,7 +101,29 @@ void ScoreBoardScene::ReadRecord() {
     std::string name;
     int score;
     while (fin >> name >> score) {
-        nameScorePair.emplace_back(name,score);
+        nameScorePair.insert({name, score});
     }
     fin.close();
 }
+
+void ScoreBoardScene::WriteRecord() {
+    std::string filename = "Resource/scoreboard.txt";
+    std::ofstream fout(filename);
+    if (!fout) {
+        throw std::runtime_error("File could not be opened");
+    }
+    for (const auto& pair : nameScorePair) {
+        fout << pair.first << " " << pair.second << std::endl;
+    }
+    fout.close();
+}
+
+void ScoreBoardScene::CalculateScore(int lives, int money) {
+    int score = 10 * lives + 5 * money;
+    nameScorePair.insert({"player1", score});
+    // nameScorePair.emplace_back("no_name",score);
+    // std::sort(nameScorePair.begin(), nameScorePair.end(), [](const auto& a, const auto& b) {
+    // return a.second > b.second; // Sorts in descending order
+    //     });
+}
+
