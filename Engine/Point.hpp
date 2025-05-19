@@ -69,6 +69,11 @@ namespace Engine {
         /// </summary>
         /// <returns>Magnitude of vector.</returns>
         float Magnitude() const;
+        /// <summary>
+        /// Lerp(const Engine::Point& a, const Engine::Point& b, float t)
+        /// </summary>
+        /// <returns>a * (1 - t) + b * t</returns>
+        Point Lerp(const Point &rhs, float t) const;
     };
     Point operator*(const float &lhs, const Point &rhs);
 }

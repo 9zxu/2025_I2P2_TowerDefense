@@ -39,4 +39,8 @@ namespace Engine {
     Point operator*(const float &lhs, const Point &rhs) {
         return rhs * lhs;
     }
+    Point Point::Lerp(const Point &rhs, float t) const {
+        return (*this) * (1 - t) + rhs * t;
+    }
+
 }
