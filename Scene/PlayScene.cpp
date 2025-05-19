@@ -11,16 +11,25 @@
 #include "Enemy/Enemy.hpp"
 #include "Enemy/SoldierEnemy.hpp"
 #include "Enemy/TankEnemy.hpp"
+#include "Enemy/PlaneEnemy.hpp"
+#include "Enemy/RedTankEnemy.hpp"
+
 #include "Engine/AudioHelper.hpp"
 #include "Engine/GameEngine.hpp"
 #include "Engine/Group.hpp"
 #include "Engine/LOG.hpp"
 #include "Engine/Resources.hpp"
+
 #include "PlayScene.hpp"
 
-#include "Enemy/PlaneEnemy.hpp"
+#include "Scene/ScoreBoardScene.hpp"
+
+#include "Turret/Shovel.hpp"
+
 #include "Turret/LaserTurret.hpp"
 #include "Turret/MachineGunTurret.hpp"
+#include "Turret/MissileTurret.hpp"
+#include "Turret/DotTurret.hpp"
 #include "Turret/TurretButton.hpp"
 #include "UI/Animation/DirtyEffect.hpp"
 #include "UI/Animation/Plane.hpp"
@@ -80,6 +89,7 @@ void PlayScene::Initialize() {
     bgmId = AudioHelper::PlayBGM("play.ogg");
 }
 void PlayScene::Terminate() {
+
     AudioHelper::StopBGM(bgmId);
     AudioHelper::StopSample(deathBGMInstance);
     deathBGMInstance = std::shared_ptr<ALLEGRO_SAMPLE_INSTANCE>();
@@ -147,8 +157,9 @@ void PlayScene::Update(float deltaTime) {
                 // delete EffectGroup;
                 // delete UIGroup;
                 // delete imgTarget;
+                ScoreBoardScene::CalculateScore(lives,money);
                 Engine::GameEngine::GetInstance().ChangeScene("win");
-                // return;
+
             }
             continue;
         }
@@ -169,6 +180,9 @@ void PlayScene::Update(float deltaTime) {
                 break;
             case 3:
                 EnemyGroup->AddNewObject(enemy = new TankEnemy(SpawnCoordinate.x, SpawnCoordinate.y));
+                break;
+            case 4:
+                EnemyGroup->AddNewObject(enemy = new RedTankEnemy(SpawnCoordinate.x, SpawnCoordinate.y));
                 break;
             default:
                 continue;
@@ -277,6 +291,15 @@ void PlayScene::OnKeyDown(int keyCode) {
     } else if (keyCode == ALLEGRO_KEY_W) {
         // Hotkey for LaserTurret.
         UIBtnClicked(1);
+    } else if (keyCode == ALLEGRO_KEY_E) {
+        // Hotkey for MissileTurret
+        UIBtnClicked(2);
+    } else if (keyCode == ALLEGRO_KEY_R) {
+        // Hotkey for DotTurret
+        UIBtnClicked(3);
+    } else if (keyCode == ALLEGRO_KEY_S) {
+        // Hotkey for shovel
+        UIBtnClicked(4);
     }
     else if (keyCode >= ALLEGRO_KEY_0 && keyCode <= ALLEGRO_KEY_9) {
         // Hotkey for Speed up.
@@ -365,6 +388,25 @@ void PlayScene::ConstructUI() {
                            Engine::Sprite("play/turret-2.png", 1370, 136 - 8, 0, 0, 0, 0), 1370, 136, LaserTurret::Price);
     btn->SetOnClickCallback(std::bind(&PlayScene::UIBtnClicked, this, 1));
     UIGroup->AddNewControlObject(btn);
+    // Button 3
+    btn = new TurretButton("play/floor.png", "play/dirt.png",
+                            Engine::Sprite("play/tower-base.png", 1446, 136, 0, 0, 0, 0),
+                            Engine::Sprite("play/turret-3.png", 1446, 136 - 8, 0, 0, 0, 0), 1446, 136, MissileTurret::Price);
+    btn->SetOnClickCallback(std::bind(&PlayScene::UIBtnClicked, this, 2));
+    UIGroup->AddNewControlObject(btn);
+    // Button 4
+    btn = new TurretButton("play/floor.png", "play/dirt.png",
+                            Engine::Sprite("play/tower-base.png", 1294, 212, 0, 0, 0, 0),
+                            Engine::Sprite("play/turret-7.png", 1294, 212 - 8, 0, 0, 0, 0), 1294, 212, DotTurret::Price);
+    btn->SetOnClickCallback(std::bind(&PlayScene::UIBtnClicked, this, 3));
+    UIGroup->AddNewControlObject(btn);
+    // Button 5 shovel
+    btn = new TurretButton("play/floor.png", "play/dirt.png",
+                            Engine::Sprite("play/light-2.png", 1370, 212, 0, 0, 0, 0),
+                            Engine::Sprite("play/shovel.png", 1370, 212 - 8, 0, 0, 0, 0), 1370, 212, Shovel::Price);
+    btn->SetOnClickCallback(std::bind(&PlayScene::UIBtnClicked, this, 4));
+    UIGroup->AddNewControlObject(btn);
+
 
     int w = Engine::GameEngine::GetInstance().GetScreenSize().x;
     int h = Engine::GameEngine::GetInstance().GetScreenSize().y;
@@ -381,6 +423,12 @@ void PlayScene::UIBtnClicked(int id) {
         preview = new MachineGunTurret(0, 0);
     else if (id == 1 && money >= LaserTurret::Price)
         preview = new LaserTurret(0, 0);
+    else if (id == 2 && money >= MissileTurret::Price)
+        preview = new MissileTurret(0, 0);
+    else if (id == 3 && money >= DotTurret::Price)
+        preview = new DotTurret(0, 0);
+    else if (id == 4 && money >= Shovel::Price)
+        preview = new Shovel(0,0);
     if (!preview)
         return;
     preview->Position = Engine::GameEngine::GetInstance().GetMousePosition();
