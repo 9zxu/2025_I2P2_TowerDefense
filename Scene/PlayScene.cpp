@@ -22,6 +22,7 @@
 
 #include "PlayScene.hpp"
 
+#include "Engine/Collider.hpp"
 #include "Scene/ScoreBoardScene.hpp"
 
 #include "Turret/Shovel.hpp"
@@ -240,9 +241,33 @@ void PlayScene::OnMouseUp(int button, int mx, int my) {
     const int x = mx / BlockSize;
     const int y = my / BlockSize;
     if (button & 1) {
+        if (!preview)
+            return;
+
+        if (dynamic_cast<Shovel*>(preview)) {
+            for (auto& obj : TowerGroup->GetObjects()) {
+                Turret *turret = dynamic_cast<Turret*>(obj);
+
+                if (turret && x==static_cast<int>(turret->Position.x)/BlockSize &&
+                    y==static_cast<int>(turret->Position.y)/BlockSize){
+                    // gain the money back
+                    EarnMoney(turret->GetPrice());
+                    //remove turret
+                    TowerGroup->RemoveObject(turret->GetObjectIterator());
+                    mapState[y][x] = TILE_FLOOR;
+                    // break;
+                }
+            }
+            //remove preview
+            preview->GetObjectIterator()->first = false;
+            UIGroup->RemoveObject(preview->GetObjectIterator());
+            preview = nullptr;
+            OnMouseMove(mx, my);
+            return;
+        }
+
         if (mapState[y][x] != TILE_OCCUPIED) {
-            if (!preview)
-                return;
+
             // Check if valid.
             if (!CheckSpaceValid(x, y)) {
                 Engine::Sprite *sprite;
@@ -417,20 +442,24 @@ void PlayScene::ConstructUI() {
 }
 
 void PlayScene::UIBtnClicked(int id) {
+    Turret *next_preview = nullptr;
+
+    if (id == 0 && money >= MachineGunTurret::Price)
+        next_preview = new MachineGunTurret(0, 0);
+    else if (id == 1 && money >= LaserTurret::Price)
+        next_preview = new LaserTurret(0, 0);
+    else if (id == 2 && money >= MissileTurret::Price)
+        next_preview = new MissileTurret(0, 0);
+    else if (id == 3 && money >= DotTurret::Price)
+        next_preview = new DotTurret(0, 0);
+    else if (id == 4 && money >= Shovel::Price)
+        next_preview = new Shovel(0,0);
+    if (!next_preview)
+        return; // not enough money or invalid turret.
+
     if (preview)
         UIGroup->RemoveObject(preview->GetObjectIterator());
-    if (id == 0 && money >= MachineGunTurret::Price)
-        preview = new MachineGunTurret(0, 0);
-    else if (id == 1 && money >= LaserTurret::Price)
-        preview = new LaserTurret(0, 0);
-    else if (id == 2 && money >= MissileTurret::Price)
-        preview = new MissileTurret(0, 0);
-    else if (id == 3 && money >= DotTurret::Price)
-        preview = new DotTurret(0, 0);
-    else if (id == 4 && money >= Shovel::Price)
-        preview = new Shovel(0,0);
-    if (!preview)
-        return;
+    preview = next_preview;
     preview->Position = Engine::GameEngine::GetInstance().GetMousePosition();
     preview->Tint = al_map_rgba(255, 255, 255, 200);
     preview->Enabled = false;

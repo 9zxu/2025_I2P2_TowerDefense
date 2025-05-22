@@ -22,6 +22,7 @@ protected:
     virtual void CreateBullet() = 0;
 
 public:
+    bool istool = false;
     bool Enabled = true;
     bool Preview = false;
     Enemy *Target = nullptr;
